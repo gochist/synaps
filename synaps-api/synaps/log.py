@@ -341,7 +341,7 @@ def _setup_logging_from_flags():
         synaps_root.addHandler(streamlog)
 
     elif not FLAGS.log_file:
-        streamlog = logging.StreamHandler(stream=sys.stdout)
+        streamlog = logging.StreamHandler(stream=sys.stderr)
         synaps_root.addHandler(streamlog)
 
     if FLAGS.publish_errors:

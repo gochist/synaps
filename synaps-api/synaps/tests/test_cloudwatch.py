@@ -516,7 +516,7 @@ class ShortCase(SynapsTestCase):
         self.assertEqual(stat1['SampleCount'], stat2['SampleCount'])
 
         
-    def test_alarm_period(self):
+    def skip_test_alarm_period(self):
         
         # 알람을 생성, MAX_START_PERIOD 를 6000 으로 증가시키는지 테스트.
         alarm = MetricAlarm(name="Test_Alarm_Period", metric=self.metric_name,

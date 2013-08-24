@@ -30,15 +30,16 @@ from synaps import flags
 from synaps import log as logging
 from synaps import utils
 
+flags.FLAGS(sys.argv)
+utils.default_flagfile()
+logging.setup()
+FLAGS = flags.FLAGS
+
 from synaps.rpc import CHECK_METRIC_ALARM_MSG_ID
 from storm import Spout, emit, log
 from uuid import uuid4
 import json
 
-flags.FLAGS(sys.argv)
-utils.default_flagfile()
-logging.setup()
-FLAGS = flags.FLAGS
 
 class CheckSpout(Spout):
     SPOUT_NAME = "CheckSpout"

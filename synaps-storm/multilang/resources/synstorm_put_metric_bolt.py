@@ -40,16 +40,17 @@ from pandas import isnull
 from synaps import flags
 from synaps import log as logging
 from synaps import utils
-from synaps.db import Cassandra
-from synaps.rpc import (PUT_METRIC_DATA_MSG_ID, PUT_METRIC_ALARM_MSG_ID,
-                        DELETE_ALARMS_MSG_ID, SET_ALARM_STATE_MSG_ID,
-                        CHECK_METRIC_ALARM_MSG_ID)
-from synaps import exception
 
 flags.FLAGS(sys.argv)
 utils.default_flagfile()
 logging.setup()
 FLAGS = flags.FLAGS
+
+from synaps.db import Cassandra
+from synaps.rpc import (PUT_METRIC_DATA_MSG_ID, PUT_METRIC_ALARM_MSG_ID,
+                        DELETE_ALARMS_MSG_ID, SET_ALARM_STATE_MSG_ID,
+                        CHECK_METRIC_ALARM_MSG_ID)
+from synaps import exception
 
 class MetricMonitor(object):
     COLUMNS = Cassandra.STATISTICS

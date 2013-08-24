@@ -32,13 +32,14 @@ import json
 import storm
 import traceback
 import zmq
-from synaps.db import Cassandra
-from synaps.utils import validate_email, validate_international_phonenumber
 
 flags.FLAGS(sys.argv)
 utils.default_flagfile()
 logging.setup()
 FLAGS = flags.FLAGS
+
+from synaps.db import Cassandra
+from synaps.utils import validate_email, validate_international_phonenumber
 
 class ActionBolt(storm.BasicBolt):
     BOLT_NAME = "ActionBolt"
