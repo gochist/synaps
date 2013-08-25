@@ -1,0 +1,14 @@
+sessionname synaps
+hardstatus alwayslastline '%{= .} %-Lw%{= .}%> %n%f %t*%{= .}%+Lw%< %-=%{g}(%{d}%H/%l%{g})'
+setenv PROMPT_COMMAND /bin/true
+screen -t shell bash
+screen -t syn-api bash
+stuff "cd /var/log/synaps && tail -f /var/log/synaps/synaps*log"
+screen -t syn-storm bash
+stuff "cd /opt/storm/logs && tail -f worker*log"
+screen -t syn-test bash
+stuff "cd /opt/stack/synaps/synaps-api/synaps/tests && python test_cloudwatch.py ShortCase"
+screen -t syn-api-dev bash
+stuff "cd /opt/stack/synaps/synaps-api"
+screen -t syn-strom-dev bash
+stuff "cd /opt/stack/synaps/synaps-storm"
