@@ -25,7 +25,7 @@ class CheckSpout(Spout):
         self.lastchecked = time.time()
     
     def log(self, msg):
-        log("[%s:%d] %s" % (self.SPOUT_NAME, self.pid, msg))
+        LOG.info(msg)
         
     def tracelog(self, e):
         msg = traceback.format_exc(e)

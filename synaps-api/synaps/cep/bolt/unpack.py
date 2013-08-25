@@ -24,7 +24,7 @@ class UnpackMessageBolt(storm.BasicBolt):
         self.key_dict = {}
     
     def log(self, msg):
-        storm.log("[%s:%d] %s" % (self.BOLT_NAME, self.pid, msg))
+        LOG.info(msg)
         
     def tracelog(self, e):
         msg = traceback.format_exc(e)

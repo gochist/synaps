@@ -29,7 +29,7 @@ class ActionBolt(storm.BasicBolt):
         self.sock.connect(self.NOTIFICATION_SERVER)
     
     def log(self, msg):
-        storm.log("[%s:%d] %s" % (self.BOLT_NAME, self.pid, msg))
+        LOG.info(msg)
         
     def tracelog(self, e):
         msg = traceback.format_exc(e)
