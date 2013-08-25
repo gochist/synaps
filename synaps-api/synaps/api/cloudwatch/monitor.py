@@ -1,4 +1,3 @@
-# -*- coding:utf-8 -*-
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2010 United States Government as represented by the
@@ -241,7 +240,7 @@ class MonitorController(object):
         
         def stat_to_datapoint(stat):
             """
-            단위 변경 및 형식 변경
+            convert unit and formatting
             """
             timestamp, values = stat
             ret = {}

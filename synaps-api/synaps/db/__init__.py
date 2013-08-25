@@ -1,4 +1,3 @@
-# -*- coding:utf-8 -*-
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright (c) 2012 Samsung SDS Co., LTD
@@ -408,9 +407,6 @@ class Cassandra(object):
         return items
     
     def put_metric_alarm(self, alarm_key, metricalarm):
-        """
-        MetricAlarm 을 DB에 생성 또는 업데이트 함.
-        """
         self.cf_metric_alarm.insert(key=alarm_key, columns=metricalarm)
         return alarm_key
         
@@ -433,8 +429,7 @@ class Cassandra(object):
     @staticmethod
     def syncdb(keyspace=None):
         """
-        카산드라 database schema 를 체크, 
-        필요한 KEYSPACE, CF, SCF 가 없으면 새로 생성.
+        Create keyspace, cf, scf
         """
         if not keyspace:
             keyspace = FLAGS.get("cassandra_keyspace", "synaps_test")
@@ -444,7 +439,7 @@ class Cassandra(object):
         strategy_options = {'replication_factor':replication_factor}
         
 
-        # keyspace 체크, keyspace 가 없으면 새로 생성
+        # create keyspace
         LOG.info(_("cassandra syncdb is started for keyspace(%s)" % keyspace))
         if keyspace not in manager.list_keyspaces():
             LOG.info(_("cassandra keyspace %s does not exist.") % keyspace)
@@ -453,14 +448,14 @@ class Cassandra(object):
         else:
             property = manager.get_keyspace_properties(keyspace)
             
-            # strategy_option 체크, option 이 다르면 수정
+            # check strategy options
             if not (strategy_options == property.get('strategy_options')):
                 manager.alter_keyspace(keyspace,
                                        strategy_options=strategy_options)
                 LOG.info(_("cassandra keyspace strategy options is updated - %s" 
                            % str(strategy_options)))
         
-        # CF 체크
+        # create CF
         column_families = manager.get_keyspace_column_families(keyspace)        
         
         if 'Metric' not in column_families.keys():

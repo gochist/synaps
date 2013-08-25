@@ -54,9 +54,6 @@ class MetricMonitor(object):
         self.DEFAULT_LEFT_OFFSET = FLAGS.get('left_offset')
         self.COLUMNS = self.cass.STATISTICS
 
-        LOG.info("statistics_ttl %s", self.STATISTICS_TTL)
-        LOG.info("columns %s", self.COLUMNS)
-        
         self.df = self.load_statistics()
         self.alarms = self.load_alarms()
         self._reindex()
@@ -230,8 +227,10 @@ class MetricMonitor(object):
         }        
         
         ttl = self.STATISTICS_TTL - time_diff.total_seconds()
-        self.cass.insert_stat(self.metric_key, stat_dict, ttl)
-        storm.log("metric data inserted %s" % (self.metric_key))
+        # ttl should be positive
+        if ttl > 0:
+            self.cass.insert_stat(self.metric_key, stat_dict, ttl)
+
     
     def check_alarms(self, query_time=None):
         query_time = query_time if query_time else utils.utcnow() 
@@ -241,12 +240,14 @@ class MetricMonitor(object):
         self.lastchecked = self.lastchecked if self.lastchecked else query_time
         if self.lastchecked < query_time:
             self.lastchecked = query_time
+
             
     def _check_alarm(self, alarmkey, alarm, query_time=None):
         period = int(alarm['period'] / 60)
         evaluation_periods = alarm['evaluation_periods']
         statistic = alarm['statistic']
         threshold = alarm['threshold']
+        alarm_name = alarm['alarm_name']
         cmp_op = self.CMP_MAP[alarm['comparison_operator']]
         unit = alarm['unit']
         state_value = alarm['state_value']
@@ -471,17 +472,13 @@ class PutMetricBolt(storm.BasicBolt):
     
     def process_put_metric_data_msg(self, metric_key, message):
         """
-        데이터베이스에 MetricArchive 컬럼패밀리에 입력된 값 추가. 메모리
-        (self.metrics)에도 입력된 값 추가.
-        
-        메모리 상의 메트릭을 기반으로 데이터베이스에 StatArchive 컬럼패밀리 
-        업데이트.
+        Update statistics data into both in-memory and database
         """
-        # 메시지 값이 없는 경우 종료    
+        # If no value is inputted, do nothing
         if message['value'] is None:
             return
         
-        # 메트릭 가져오기
+        # bring data from database onto the memory
         if metric_key not in self.metrics:
             self.metrics[metric_key] = MetricMonitor(metric_key, self.cass)
 
@@ -492,6 +489,7 @@ class PutMetricBolt(storm.BasicBolt):
                                                  timestamp=timestamp,
                                                  value=message['value'],
                                                  unit=message['unit'])
+
     
     def process_put_metric_alarm_msg(self, metric_key, message):
         if metric_key not in self.metrics:
@@ -500,12 +498,13 @@ class PutMetricBolt(storm.BasicBolt):
         metricalarm = message['metricalarm']
         self.metrics[metric_key].put_alarm(project_id, metricalarm)
 
+
     def process_delete_metric_alarms_msg(self, metric_key, message):
         alarmkey = UUID(message['alarmkey'])
-        self.log("debug: %s" % self.metrics.keys())
         if metric_key not in self.metrics:
             self.metrics[metric_key] = MetricMonitor(metric_key, self.cass)
         self.metrics[metric_key].delete_metric_alarm(alarmkey)
+
         
     def process_set_alarm_state_msg(self, metric_key, message):
         project_id = message.get('project_id')
@@ -523,10 +522,8 @@ class PutMetricBolt(storm.BasicBolt):
             try:
                 metricalarm = metric.alarms[alarm_key]
             except KeyError:
-                storm.log("alarm key [%s] is found, but alarm is not found." % alarm_key)
-                return            
+                return
         else:
-            storm.log("alarm key [%s] is not found." % alarm_key)
             return
         
         metricalarm['state_reason'] = message.get('state_reason')
@@ -540,12 +537,14 @@ class PutMetricBolt(storm.BasicBolt):
             alarm_columns['state_reason_data'] = state_reason_data
         
         self.cass.put_metric_alarm(alarm_key, alarm_columns)
+
         
     def process_check_metric_alarms_msg(self):
         query_time = datetime.utcnow()
 
         for metric in self.metrics.itervalues():
             metric.check_alarms(query_time)
+
         
     def process(self, tup):
         message = json.loads(tup.values[1])
@@ -556,8 +555,8 @@ class PutMetricBolt(storm.BasicBolt):
         try:
             metric_key = UUID(tup.values[0]) if tup.values[0] else None
         except ValueError:
-            LOG.info("badly formed hexadecimal UUID string - %s",  
-                     tup.values[0])
+            #LOG.info("badly formed hexadecimal UUID string - %s",  
+            #         tup.values[0])
             return
         
         if message_id == PUT_METRIC_DATA_MSG_ID:

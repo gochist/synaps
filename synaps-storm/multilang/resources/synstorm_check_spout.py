@@ -24,7 +24,7 @@ if os.path.exists(os.path.join(possible_topdir, "synaps", "__init__.py")):
     sys.path.insert(0, possible_topdir)
 
 from synaps import flags
-from synaps import log as logging
+#from synaps import log as logging
 from synaps import utils
 from synaps.cep.spout.check import CheckSpout
 
@@ -33,5 +33,5 @@ if __name__ == "__main__":
     flags.FLAGS(sys.argv)
     utils.default_flagfile()
     FLAGS = flags.FLAGS
-    logging.setup()
+#    logging.setup()
     CheckSpout().run()

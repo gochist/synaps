@@ -19,14 +19,12 @@ class ApiSpout(Spout):
     def initialize(self, conf, context):
         self.pid = os.getpid()       
         self.connect()
+        LOG.info("THIS IS HANDLERS %s", LOG.logger.handlers)
     
+
     def log(self, msg):
         LOG.info(msg)
-        
-    def tracelog(self, e):
-        msg = traceback.format_exc(e)
-        for line in msg.splitlines():
-            self.log("TRACE: " + line)
+    
     
     def connect(self):
         while True:
@@ -56,11 +54,14 @@ class ApiSpout(Spout):
         self.channel.queue_declare(queue='metric_queue', durable=True,
                                    arguments=queue_args)
 
+
     def ack(self, id):
-        self.log("Acked message [%s]" % id)
+        LOG.info("Acked message %s", id)
+
             
     def fail(self, id):
-        self.log("Reject failed message [%s]" % id)
+        LOG.error("Reject failed message %s", id)
+
     
     def nextTuple(self):
         try:
@@ -68,7 +69,7 @@ class ApiSpout(Spout):
                 queue="metric_queue", no_ack=True
             )
         except (AMQPConnectionError, AMQPChannelError):
-            self.log("AMQP Connection or Channel Error. While get a message.")
+            LOG.error("AMQP Connection or Channel Error. While get a message.")
             self.connect()
             return
 
@@ -76,6 +77,6 @@ class ApiSpout(Spout):
             mq_msg_id = method_frame.delivery_tag
             msg_body = json.loads(body)
             msg_id, msg_uuid = msg_body['message_id'], msg_body['message_uuid']
-            message = "Start processing message in the queue - [%s:%s] %s"
-            self.log(message % (msg_id, msg_uuid, body))
+            message = "Start processing message in the queue - [%s:%s]"
+            LOG.info(message, msg_id, msg_uuid)
             emit([body], id=msg_uuid)

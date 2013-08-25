@@ -61,7 +61,7 @@ log_opts = [
                help='format string to use for log messages without context'),
     cfg.StrOpt('logging_debug_format_suffix',
                default='from (pid=%(process)d) %(funcName)s '
-                       '%(pathname)s:%(lineno)d',
+                       '%(pathname)s:%(lineno)d %(synaps_version)s',
                help='data to append to log format when level is DEBUG'),
     cfg.StrOpt('logging_exception_prefix',
                default='(%(name)s): TRACE: ',

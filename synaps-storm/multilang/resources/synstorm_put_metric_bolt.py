@@ -1,5 +1,4 @@
 #!/usr/bin/env python -u
-# -*- coding:utf-8 -*-
 
 # Copyright (c) 2012 Samsung SDS Co., LTD
 # All Rights Reserved.
@@ -26,7 +25,7 @@ if os.path.exists(os.path.join(possible_topdir, "synaps", "__init__.py")):
 
 
 from synaps import flags
-from synaps import log as logging
+#from synaps import log as logging
 from synaps import utils
 from synaps.cep.bolt.put_metic import PutMetricBolt
 
@@ -34,6 +33,6 @@ from synaps.cep.bolt.put_metic import PutMetricBolt
 if __name__ == "__main__":
     flags.FLAGS(sys.argv)
     utils.default_flagfile()
-    logging.setup()
+#    logging.setup()
     FLAGS = flags.FLAGS
     PutMetricBolt().run()

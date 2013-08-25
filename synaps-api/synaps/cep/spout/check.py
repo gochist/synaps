@@ -10,12 +10,22 @@ from synaps.cep.storm import Spout, emit, log
 from uuid import uuid4
 import json
 import os
-import time
+from datetime import datetime, timedelta
 import traceback
+import time
 
 class CheckSpout(Spout):
     SPOUT_NAME = "CheckSpout"
-    lastchecked = 0
+    lastchecked = datetime.utcnow().replace(second=0, microsecond=0)
+
+
+    def ack(self, id):
+        LOG.info("Acked message [%s]" % id)
+
+
+    def fail(self, id):
+        LOG.error("Reject failed message [%s]" % id)
+
     
     def initialize(self, conf, context):
         self.pid = os.getpid()
@@ -23,17 +33,16 @@ class CheckSpout(Spout):
         self.nextTuple()
         self.delivery_tags = {}
         self.lastchecked = time.time()
+
     
     def nextTuple(self):
-        now = time.time()
-        if self.lastchecked == 0:
+        now = datetime.utcnow().replace(second=0, microsecond=0)
+        if self.lastchecked != now:
             self.lastchecked = now
-        elif now - self.lastchecked >= 60: 
-            self.lastchecked = now
-            id = "periodic_%s" % str(uuid4())
+            msg_id = "periodic_%s" % str(uuid4())
             body = json.dumps({'message_id': CHECK_METRIC_ALARM_MSG_ID})
-            message = "Periodic monitoring message sent [%s] %s"
-            LOG.debug(message % (id, body))
-            emit([None, body], id=id)
+            message = "Periodic monitoring message sent %s"
+            LOG.info(message, msg_id)
+            emit([None, body], id=msg_id)
         else:
             time.sleep(1)

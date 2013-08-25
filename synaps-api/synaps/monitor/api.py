@@ -1,4 +1,3 @@
-# -*- coding:utf-8 -*-
 # vim: tabstop=4 shiftwidth=4 softtabstop=4
 
 # Copyright 2010 United States Government as represented by the
@@ -135,7 +134,7 @@ class API(object):
                               namespace, period, start_time, statistics,
                               unit=None, dimensions=None):
         """
-        입력받은 조건에 일치하는 메트릭의 통계자료 리스트를 반환한다.
+        return metric statistics
         """
         def to_datapoint(df, idx):
             datapoint = df.ix[idx].dropna()
@@ -185,7 +184,7 @@ class API(object):
     def list_metrics(self, project_id, next_token=None, dimensions=None,
                      metric_name=None, namespace=None):
         """
-        입력받은 조건과 일치하는 메트릭의 리스트를 반환한다.
+        return metric lists
         """
         metrics = self.cass.list_metrics(project_id, namespace, metric_name,
                                          dimensions, next_token)
@@ -193,9 +192,7 @@ class API(object):
     
     def put_metric_alarm(self, project_id, metricalarm):
         """
-        알람을 DB에 넣고 값이 빈 dictionary 를 반환한다.
-        메트릭 유무 확인
-        알람 히스토리 발생.
+        put metric alarm
         """
         def metricalarm_for_json(metricalarm):
             alarm_for_json = {
@@ -223,7 +220,7 @@ class API(object):
         now = utils.utcnow()
         metricalarm = metricalarm.to_columns()
         
-        # 메트릭 유무 확인
+        # check if the metric already exists
         metric_key = self.cass.get_metric_key_or_create(
             project_id=project_id,
             namespace=metricalarm['namespace'],
@@ -239,7 +236,7 @@ class API(object):
         )
         metricalarm['alarm_configuration_updated_timestamp'] = now
         
-        # 알람 유무 확인
+        # check if the metric has the alarm already
         alarm_key = self.cass.get_metric_alarm_key(
             project_id=project_id, alarm_name=metricalarm['alarm_name']
         )
@@ -317,7 +314,7 @@ class API(object):
     def put_metric_data(self, project_id, namespace, metric_name, dimensions,
                         value, unit, timestamp, is_admin=False):
         """
-        metric data 를 입력받아 MQ 에 넣고 값이 빈 dictionary 를 반환한다.        
+        input metric data
         """
         if namespace.startswith("SPCS/") and not is_admin:
             raise AdminRequired()
