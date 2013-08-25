@@ -17,15 +17,15 @@ from synaps.utils import validate_email, validate_international_phonenumber
 
 class ActionBolt(storm.BasicBolt):
     BOLT_NAME = "ActionBolt"
-    ENABLE_SEND_MAIL = FLAGS.get('enable_send_mail')
-    ENABLE_SEND_SMS = FLAGS.get('enable_send_sms')
-    NOTIFICATION_SERVER = FLAGS.get('notification_server_addr')
     
     def initialize(self, stormconf, context):
         self.pid = os.getpid()
         self.cass = Cassandra()
         self.ctx = zmq.Context()
         self.sock = self.ctx.socket(zmq.PUSH)
+        self.ENABLE_SEND_MAIL = FLAGS.get('enable_send_mail')
+        self.ENABLE_SEND_SMS = FLAGS.get('enable_send_sms')
+        self.NOTIFICATION_SERVER = FLAGS.get('notification_server_addr')
         self.sock.connect(self.NOTIFICATION_SERVER)
     
     def log(self, msg):

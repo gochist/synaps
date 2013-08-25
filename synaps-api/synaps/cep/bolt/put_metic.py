@@ -23,10 +23,6 @@ LOG = logging.getLogger(__name__)
 
 
 class MetricMonitor(object):
-    COLUMNS = Cassandra.STATISTICS
-    STATISTICS_TTL = FLAGS.get('statistics_ttl')
-    DEFAULT_LEFT_OFFSET = FLAGS.get('left_offset')
-        
     ROLLING_FUNC_MAP = {
         'Average': rolling_mean,
         'Minimum': rolling_min,
@@ -54,7 +50,13 @@ class MetricMonitor(object):
         self.cass = cass
         self.left_offset = FLAGS.get('left_offset')
         self.right_offset = FLAGS.get('right_offset')
+        self.STATISTICS_TTL = FLAGS.get('statistics_ttl')
+        self.DEFAULT_LEFT_OFFSET = FLAGS.get('left_offset')
+        self.COLUMNS = self.cass.STATISTICS
 
+        LOG.info("statistics_ttl %s", self.STATISTICS_TTL)
+        LOG.info("columns %s", self.COLUMNS)
+        
         self.df = self.load_statistics()
         self.alarms = self.load_alarms()
         self._reindex()
@@ -167,7 +169,7 @@ class MetricMonitor(object):
         
         def get_stats(tmp_stat):
             try:
-                ret = dict(zip(self.cass.STATISTICS,
+                ret = dict(zip(self.COLUMNS,
                                     map(lambda x: x.values()[0], tmp_stat)))
                 for v in ret:
                     if v == None: v = float('nan') 
@@ -183,7 +185,7 @@ class MetricMonitor(object):
         time_idx = timestamp.replace(second=0, microsecond=0)
         time_diff = utils.utcnow() - time_idx
         
-        if timedelta(seconds=self.cass.STATISTICS_TTL) < time_diff:
+        if timedelta(seconds=self.STATISTICS_TTL) < time_diff:
             msg = "index %s is older than TTL. It doesn't need to insert DB"
             storm.log(msg % time_idx)
             return
@@ -227,7 +229,7 @@ class MetricMonitor(object):
             'Maximum':{time_idx: stat['Maximum']}
         }        
         
-        ttl = self.cass.STATISTICS_TTL - time_diff.total_seconds()
+        ttl = self.STATISTICS_TTL - time_diff.total_seconds()
         self.cass.insert_stat(self.metric_key, stat_dict, ttl)
         storm.log("metric data inserted %s" % (self.metric_key))
     
@@ -549,29 +551,25 @@ class PutMetricBolt(storm.BasicBolt):
         message = json.loads(tup.values[1])
         message_id = message['message_id']
         message_uuid = message.get('message_uuid', None)
-        self.log("start processing msg[%s:%s]" % (message_id, message_uuid))
+        LOG.info("start processing msg[%s:%s]", message_id, message_uuid)
 
         try:
             metric_key = UUID(tup.values[0]) if tup.values[0] else None
         except ValueError:
-            self.log("badly formed hexadecimal UUID string - %s" % 
+            LOG.info("badly formed hexadecimal UUID string - %s",  
                      tup.values[0])
             return
         
         if message_id == PUT_METRIC_DATA_MSG_ID:
-            self.log("process put_metric_data_msg (%s)" % message)
             self.process_put_metric_data_msg(metric_key, message)
         elif message_id == PUT_METRIC_ALARM_MSG_ID:
-            self.log("process put_metric_alarm_msg (%s)" % message)
             self.process_put_metric_alarm_msg(metric_key, message)
         elif message_id == DELETE_ALARMS_MSG_ID:
-            self.log("process put_metric_alarm_msg (%s)" % message)
             self.process_delete_metric_alarms_msg(metric_key, message)
         elif message_id == SET_ALARM_STATE_MSG_ID:
-            self.log("process set_alarm_state_msg (%s)" % message)
             self.process_set_alarm_state_msg(metric_key, message)
         elif message_id == CHECK_METRIC_ALARM_MSG_ID:
-            self.log("process check_metric_alarm_msg (%s)" % message)
             self.process_check_metric_alarms_msg()
         else:
-            self.log("unknown message")
+            LOG.error("unknown message")
+

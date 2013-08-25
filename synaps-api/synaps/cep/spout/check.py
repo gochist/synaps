@@ -24,14 +24,6 @@ class CheckSpout(Spout):
         self.delivery_tags = {}
         self.lastchecked = time.time()
     
-    def log(self, msg):
-        LOG.info(msg)
-        
-    def tracelog(self, e):
-        msg = traceback.format_exc(e)
-        for line in msg.splitlines():
-            self.log("TRACE: " + line)
-    
     def nextTuple(self):
         now = time.time()
         if self.lastchecked == 0:
@@ -41,7 +33,7 @@ class CheckSpout(Spout):
             id = "periodic_%s" % str(uuid4())
             body = json.dumps({'message_id': CHECK_METRIC_ALARM_MSG_ID})
             message = "Periodic monitoring message sent [%s] %s"
-            self.log(message % (id, body))
+            LOG.debug(message % (id, body))
             emit([None, body], id=id)
         else:
             time.sleep(1)

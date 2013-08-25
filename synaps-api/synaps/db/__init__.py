@@ -246,7 +246,6 @@ class Cassandra(object):
                        'name': metric_name, 'dimensions': json_dim,
                        'unit': unit}
             
-            LOG.debug("cf_metric.insert (%s, %s)" % (key, columns))
             self.cf_metric.insert(key=key, columns=columns)
         
         return key
@@ -264,9 +263,9 @@ class Cassandra(object):
                                                  column_finish=column_end,
                                                  column_count=count)
             except pycassa.NotFoundException:
-                LOG.info("not found data - %s %s %s %s" % (key, super_column,
-                                                           column_start,
-                                                           column_end))
+                LOG.debug("not found %s %s %s %s" % (key, super_column,
+                                                     column_start,
+                                                     column_end))
             
             return stat
         
@@ -295,9 +294,9 @@ class Cassandra(object):
                                                  column_finish=column_end,
                                                  column_count=1440)
             except pycassa.NotFoundException:
-                LOG.info("not found data - %s %s %s %s" % (key, super_column,
-                                                           column_start,
-                                                           column_end))
+                LOG.debug("not found %s %s %s %s" % (key, super_column,
+                                                     column_start,
+                                                     column_end))
             
             return stat
         
@@ -317,12 +316,10 @@ class Cassandra(object):
         return metric.get('unit', "None")
 
     def insert_stat(self, metric_key, stat, ttl=None):
-        LOG.debug("scf_stat_archive.insert (%s, %s)" % (metric_key, stat))
         ttl = ttl if ttl else self.STATISTICS_TTL
         self.scf_stat_archive.insert(metric_key, stat, ttl=ttl)
     
     def insert_alarm_history(self, key, column):
-        LOG.debug("cf_alarm_history.insert (%s, %s)" % (key, column))
         self.cf_alarm_history.insert(key, column, ttl=self.STATISTICS_TTL)
         
     def update_alarm_state(self, alarmkey, state, reason, reason_data,
@@ -331,8 +328,6 @@ class Cassandra(object):
                       'state_reason_data': reason_data,
                       'state_updated_timestamp':timestamp}
         self.cf_metric_alarm.insert(alarmkey, state_info)
-        LOG.debug("cf_metric_alarm.insert (%s, %s)" % (str(alarmkey),
-                                                       str(state_info)))
 
     def list_metrics(self, project_id, namespace=None, metric_name=None,
                      dimensions=None, next_token=""):
@@ -416,7 +411,6 @@ class Cassandra(object):
         """
         MetricAlarm 을 DB에 생성 또는 업데이트 함.
         """
-        LOG.debug("cf_metric_alarm.insert (%s, %s)" % (alarm_key, metricalarm)) 
         self.cf_metric_alarm.insert(key=alarm_key, columns=metricalarm)
         return alarm_key
         
@@ -613,3 +607,4 @@ class Cassandra(object):
                                  value_type=types.DateType())            
                         
         LOG.info(_("cassandra syncdb has finished"))
+
