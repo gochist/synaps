@@ -1,6 +1,6 @@
 library identifier: 'custom-lib@master', retriever: modernSCM(
   [$class: 'GitSCMSource',
-   remote: 'git@github.com:gochist/jenkinslib.git',
+   remote: 'https://github.com/gochist/jenkinslib.git',
    credentialsId: 'blueocean-folder-credential-domain/github'])
 
 pipeline {
