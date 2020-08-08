@@ -1,3 +1,8 @@
+library identifier: 'custom-lib@master', retriever: modernSCM(
+  [$class: 'GitSCMSource',
+   remote: 'git@github.com:gochist/jenkinslib.git',
+   credentialsId: 'github'])
+
 pipeline {
     agent any
 
